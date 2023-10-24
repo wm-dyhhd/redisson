@@ -32,10 +32,12 @@ public class ClusterSlotRange {
     }
 
     public int getStartSlot() {
+        // 0
         return startSlot;
     }
 
     public int getEndSlot() {
+        // 16384
         return endSlot;
     }
 

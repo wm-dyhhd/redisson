@@ -66,11 +66,13 @@ public class Redisson implements RedissonClient {
         this.config = config;
         Config configCopy = new Config(config);
 
+
         connectionManager = ConfigSupport.createConnectionManager(configCopy);
         RedissonObjectBuilder objectBuilder = null;
         if (config.isReferenceEnabled()) {
             objectBuilder = new RedissonObjectBuilder(this);
         }
+        // 命令执行器
         commandExecutor = new CommandAsyncService(connectionManager, objectBuilder, RedissonObjectBuilder.ReferenceType.DEFAULT);
         evictionScheduler = new EvictionScheduler(commandExecutor);
         writeBehindService = new WriteBehindService(commandExecutor);

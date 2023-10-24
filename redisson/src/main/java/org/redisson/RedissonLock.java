@@ -53,6 +53,7 @@ public class RedissonLock extends RedissonBaseLock {
     public RedissonLock(CommandAsyncExecutor commandExecutor, String name) {
         super(commandExecutor, name);
         this.commandExecutor = commandExecutor;
+        // 锁的事件
         this.internalLockLeaseTime = getServiceManager().getCfg().getLockWatchdogTimeout();
         this.pubSub = commandExecutor.getConnectionManager().getSubscribeService().getLockPubSub();
     }
@@ -100,7 +101,9 @@ public class RedissonLock extends RedissonBaseLock {
     }
 
     private void lock(long leaseTime, TimeUnit unit, boolean interruptibly) throws InterruptedException {
+        // 当前线程ID
         long threadId = Thread.currentThread().getId();
+        // 剩余事件
         Long ttl = tryAcquire(-1, leaseTime, unit, threadId);
         // lock acquired
         if (ttl == null) {
@@ -194,6 +197,7 @@ public class RedissonLock extends RedissonBaseLock {
 
         CompletionStage<Long> f = ttlRemainingFuture.thenApply(ttlRemaining -> {
             // lock acquired
+            // 获取到了锁s
             if (ttlRemaining == null) {
                 if (leaseTime > 0) {
                     internalLockLeaseTime = unit.toMillis(leaseTime);
@@ -212,6 +216,10 @@ public class RedissonLock extends RedissonBaseLock {
     }
 
     <T> RFuture<T> tryLockInnerAsync(long waitTime, long leaseTime, TimeUnit unit, long threadId, RedisStrictCommand<T> command) {
+        // hexists 哈希表中字段是否存在
+        // hincrby 自增 + 1
+        // pexpire 过期事件
+        // pttl 还剩下多少毫秒
         return evalWriteAsync(getRawName(), LongCodec.INSTANCE, command,
                 "if ((redis.call('exists', KEYS[1]) == 0) " +
                             "or (redis.call('hexists', KEYS[1], ARGV[2]) == 1)) then " +

@@ -132,7 +132,8 @@ public abstract class RedissonBaseLock extends RedissonExpirable implements RLoc
                 if (threadId == null) {
                     return;
                 }
-                
+
+                // 续约过期事件
                 CompletionStage<Boolean> future = renewExpirationAsync(threadId);
                 future.whenComplete((res, e) -> {
                     if (e != null) {

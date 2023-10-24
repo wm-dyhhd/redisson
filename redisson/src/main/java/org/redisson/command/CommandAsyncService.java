@@ -300,6 +300,7 @@ public class CommandAsyncService implements CommandAsyncExecutor {
     }
 
     private NodeSource getNodeSource(String key) {
+        // 计算 slot 值
         int slot = connectionManager.calcSlot(key);
         return new NodeSource(slot);
     }
@@ -517,6 +518,7 @@ public class CommandAsyncService implements CommandAsyncExecutor {
 
     @Override
     public <T, R> RFuture<R> writeAsync(String key, Codec codec, RedisCommand<T> command, Object... params) {
+        // 获取 nodeSource
         NodeSource source = getNodeSource(key);
         return async(false, source, codec, command, params, false, false);
     }
@@ -882,7 +884,7 @@ public class CommandAsyncService implements CommandAsyncExecutor {
             }
 
             RFuture<BatchResult<?>> future = executorService.executeAsync();
-            CompletionStage<T> f = future.handle((res, ex) -> {
+            return future.handle((res, ex) -> {
                 if (ex != null) {
                     throw new CompletionException(ex);
                 }
@@ -894,7 +896,6 @@ public class CommandAsyncService implements CommandAsyncExecutor {
 
                 return getNow(result.toCompletableFuture());
             });
-            return f;
         });
         return new CompletableFutureWrapper<>(resFuture);
     }
