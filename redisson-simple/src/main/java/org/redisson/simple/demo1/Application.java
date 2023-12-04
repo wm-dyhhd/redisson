@@ -27,15 +27,20 @@ public class Application {
 
         RedissonClient redisson = Redisson.create(config);
 
+        // 非公平锁
         RLock lock = redisson.getLock("anyLock");
         lock.lock();
         lock.unlock();
 
         boolean tryLock = lock.tryLock(100, 10, TimeUnit.SECONDS);
 
+        // 公平锁
         RLock fairLock = redisson.getFairLock("myFairLock");
         fairLock.lock();
         fairLock.unlock();
+
+        // 多个锁 加锁
+        RLock multiLock = redisson.getMultiLock(lock, fairLock);
 
 //        RMap<String, Object> map = redisson.getMap("anyMap");
 //        map.put("foo", "bar");

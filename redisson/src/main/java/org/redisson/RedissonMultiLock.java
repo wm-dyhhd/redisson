@@ -234,7 +234,7 @@ public class RedissonMultiLock implements RLock {
 
     @Override
     public void lockInterruptibly(long leaseTime, TimeUnit unit) throws InterruptedException {
-        long baseWaitTime = locks.size() * 1500;
+        long baseWaitTime = locks.size() * 1500L;
         while (true) {
             long waitTime;
             if (leaseTime <= 0) {
