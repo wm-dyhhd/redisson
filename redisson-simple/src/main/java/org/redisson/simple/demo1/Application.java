@@ -6,6 +6,8 @@ import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * 第一个应用
  *
@@ -28,6 +30,12 @@ public class Application {
         RLock lock = redisson.getLock("anyLock");
         lock.lock();
         lock.unlock();
+
+        boolean tryLock = lock.tryLock(100, 10, TimeUnit.SECONDS);
+
+        RLock fairLock = redisson.getFairLock("myFairLock");
+        fairLock.lock();
+        fairLock.unlock();
 
 //        RMap<String, Object> map = redisson.getMap("anyMap");
 //        map.put("foo", "bar");

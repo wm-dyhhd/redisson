@@ -339,6 +339,7 @@ public abstract class RedissonBaseLock extends RedissonExpirable implements RLoc
         String id = getServiceManager().generateId();
         MasterSlaveServersConfig config = getServiceManager().getConfig();
         int timeout = (config.getTimeout() + config.getRetryInterval()) * config.getRetryAttempts();
+        // 子实现
         RFuture<Boolean> r = unlockInnerAsync(threadId, id, timeout);
         CompletionStage<Boolean> ff = r.thenApply(v -> {
             CommandAsyncExecutor ce = commandExecutor;

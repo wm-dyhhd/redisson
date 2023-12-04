@@ -103,7 +103,7 @@ public class RedissonLock extends RedissonBaseLock {
     private void lock(long leaseTime, TimeUnit unit, boolean interruptibly) throws InterruptedException {
         // 当前线程ID
         long threadId = Thread.currentThread().getId();
-        // 剩余事件
+        // 剩余时间
         Long ttl = tryAcquire(-1, leaseTime, unit, threadId);
         // lock acquired
         if (ttl == null) {
@@ -127,6 +127,7 @@ public class RedissonLock extends RedissonBaseLock {
                     break;
                 }
 
+                // 其它客户端还是占用了这个锁
                 // waiting for message
                 if (ttl >= 0) {
                     try {
@@ -244,6 +245,7 @@ public class RedissonLock extends RedissonBaseLock {
         
         time -= System.currentTimeMillis() - current;
         if (time <= 0) {
+            // 标记获取失败
             acquireFailed(waitTime, unit, threadId);
             return false;
         }
@@ -352,13 +354,13 @@ public class RedissonLock extends RedissonBaseLock {
                                     "if (redis.call('hexists', KEYS[1], ARGV[3]) == 0) then " +
                                         "return nil;" +
                                     "end; " +
-                                    "local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); " +
-                                    "if (counter > 0) then " +
+                                    "local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); " + // 递减 1，因为是可重入锁，每个锁里面的值是 ++1
+                                    "if (counter > 0) then " + // 发布消息，递减 1
                                         "redis.call('pexpire', KEYS[1], ARGV[2]); " +
                                         "redis.call('set', KEYS[3], 0, 'px', ARGV[5]); " +
                                         "return 0; " +
                                     "else " +
-                                        "redis.call('del', KEYS[1]); " +
+                                        "redis.call('del', KEYS[1]); " + // 删除 释放锁
                                         "redis.call(ARGV[4], KEYS[2], ARGV[1]); " +
                                         "redis.call('set', KEYS[3], 1, 'px', ARGV[5]); " +
                                         "return 1; " +
