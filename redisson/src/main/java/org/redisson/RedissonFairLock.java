@@ -127,11 +127,14 @@ public class RedissonFairLock extends RedissonLock implements RLock {
                         "end;" +
                     "end;" +
 
+                            // 如果没人加锁
+                            // 并且
+                            // 要么队列不存在或者 这个队列存在，但是队列的第一个元素是当前线程
                     "if (redis.call('exists', KEYS[1]) == 0) " +
                         "and ((redis.call('exists', KEYS[2]) == 0) " +
                             "or (redis.call('lindex', KEYS[2], 0) == ARGV[2])) then " +
-                        "redis.call('lpop', KEYS[2]);" +
-                        "redis.call('zrem', KEYS[3], ARGV[2]);" +
+                        "redis.call('lpop', KEYS[2]);" +// 取出第一个元素
+                        "redis.call('zrem', KEYS[3], ARGV[2]);" +// set 集合中删除这个线程
 
                         // decrease timeouts for all waiting in the queue
                         "local keys = redis.call('zrange', KEYS[3], 0, -1);" +
@@ -139,8 +142,8 @@ public class RedissonFairLock extends RedissonLock implements RLock {
                             "redis.call('zincrby', KEYS[3], -tonumber(ARGV[4]), keys[i]);" +
                         "end;" +
 
-                        "redis.call('hset', KEYS[1], ARGV[2], 1);" +
-                        "redis.call('pexpire', KEYS[1], ARGV[1]);" +
+                        "redis.call('hset', KEYS[1], ARGV[2], 1);" +// 放入集合中
+                        "redis.call('pexpire', KEYS[1], ARGV[1]);" +// 设置时间
                         "return nil;" +
                     "end;" +
                     "if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then " +

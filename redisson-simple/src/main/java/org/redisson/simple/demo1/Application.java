@@ -1,9 +1,8 @@
 package org.redisson.simple.demo1;
 
 import org.redisson.Redisson;
-import org.redisson.api.RLock;
-import org.redisson.api.RMap;
-import org.redisson.api.RedissonClient;
+import org.redisson.RedissonSemaphore;
+import org.redisson.api.*;
 import org.redisson.config.Config;
 
 import java.util.concurrent.TimeUnit;
@@ -41,6 +40,27 @@ public class Application {
 
         // 多个锁 加锁
         RLock multiLock = redisson.getMultiLock(lock, fairLock);
+        multiLock.lock();
+        multiLock.unlock();
+
+        RReadWriteLock readWriteLock = redisson.getReadWriteLock("readWriteLock");
+
+        // redis 信号量
+        RSemaphore semaphore = redisson.getSemaphore("semaphore");
+        semaphore.trySetPermits(3);// 设置只有三个客户端可以获取到锁
+
+        int count = 3;
+        // redis CountDownLatch
+        RCountDownLatch countDownLatch = redisson.getCountDownLatch("countDownLatch");
+        countDownLatch.trySetCount(count);// 三个任务
+
+        for (int i = 0; i < count; i++) {
+            // execute worker
+            countDownLatch.countDown();
+        }
+
+        countDownLatch.await();
+
 
 //        RMap<String, Object> map = redisson.getMap("anyMap");
 //        map.put("foo", "bar");
